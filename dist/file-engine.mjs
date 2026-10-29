@@ -63,7 +63,7 @@ export async function readFile(file,progress=()=>{}){
     text=text.trim();if(!text)blank++;pages.push(text);total+=text.length;if(total>MAX_TEXT)fail('PDF matni juda uzun. Uni qismlarga ajrating.');page.cleanup();
    }
    const text=pages.join('\n\n');if(!text.trim())fail('PDF’da o‘qiladigan matn topilmadi. Skanerlangan rasmlar uchun OCR hali qo‘llanmaydi.');
-   return {ext,name:file.name,text,pages:pdf.numPages,warnings:blank?[`${blank} ta sahifada matn topilmadi; ular skanerlangan yoki bo‘sh bo‘lishi mumkin.`]:[]};
+   return {ext,name:file.name,text,pageTexts:pages,pages:pdf.numPages,warnings:blank?[`${blank} ta sahifada matn topilmadi; ular skanerlangan yoki bo‘sh bo‘lishi mumkin.`]:[]};
   }finally{await loading.destroy();}
  }
  checkZip(buffer);const JSZip=await getZip();let zip;try{zip=await JSZip.loadAsync(buffer);}catch{fail('Hujjat ochilmadi. Fayl buzilgan yoki parol bilan himoyalangan.');}
@@ -82,6 +82,7 @@ export async function readFile(file,progress=()=>{}){
 }
 export async function convertFile(document,reverse,progress=()=>{}){
  const text=globalThis.convert(document.text,reverse),base=document.name.replace(/\.[^.]+$/,'');
+ if(document.ext==='pdf'){const {createPdf}=await import('./pdf-export.mjs?v=7');const pages=(document.pageTexts||[document.text]).map(page=>globalThis.convert(page,reverse));const result=await createPdf(pages,progress);return {...result,text,filename:base+'-alifbo.pdf'};}
  if(!document.zip)return {text,blob:new Blob([text],{type:'text/plain;charset=utf-8'}),filename:base+'-alifbo.txt'};
  const zip=document.zip.clone();
  for(let i=0;i<document.parts.length;i++){

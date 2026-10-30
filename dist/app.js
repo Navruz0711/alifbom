@@ -19,10 +19,3 @@ $('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('output').
 $('choose-file').onclick=()=>$('file-input').click();$('file-input').onchange=e=>{chooseFile(e.target.files[0]);e.target.value='';};$('remove-file').onclick=resetFile;$('save-file').onclick=()=>{if(fileResult&&!busy)download(fileResult.blob,fileResult.filename);};
 let dragDepth=0;$('dropzone').addEventListener('dragenter',e=>{e.preventDefault();dragDepth++;if(!busy)$('dropzone').classList.add('dragging');});$('dropzone').addEventListener('dragover',e=>e.preventDefault());$('dropzone').addEventListener('dragleave',()=>{if(--dragDepth<=0){dragDepth=0;$('dropzone').classList.remove('dragging');}});$('dropzone').addEventListener('drop',e=>{e.preventDefault();dragDepth=0;$('dropzone').classList.remove('dragging');if(!busy){if(e.dataTransfer.files.length>1){$('file-error').textContent='Bir vaqtning o‘zida bitta hujjat tanlang.';$('file-error').hidden=false;}else chooseFile(e.dataTransfer.files[0]);}});
 update();
-
-const supportDialog=$('support-dialog');
-$('open-support').onclick=()=>{$('donate-status').textContent='';supportDialog.showModal();document.body.classList.add('donation-open');};
-$('close-support').onclick=()=>supportDialog.close();
-supportDialog.addEventListener('close',()=>{document.body.classList.remove('donation-open');$('open-support').focus();});
-supportDialog.addEventListener('click',e=>{if(e.target===supportDialog){const r=supportDialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)supportDialog.close();}});
-$('copy-card').onclick=async()=>{try{await navigator.clipboard.writeText($('donate-number').value.replace(/\s/g,''));$('donate-status').textContent='Karta raqami nusxalandi!';}catch{$('donate-number').focus();$('donate-number').select();$('donate-status').textContent='Raqamni nusxalash uchun Ctrl+C yoki ⌘C bosing.';}};

@@ -20,3 +20,18 @@ Serve project root and open `/tests/runner.html` to run browser tests with synth
 - pdf-lib 1.17.1 and @pdf-lib/fontkit 1.1.1; Noto Sans under SIL OFL.
 - PDF.js 6.4.299 (Apache 2.0), `dist/vendor/pdfjs/LICENSE`.
 - API references: https://mozilla.github.io/pdf.js/examples/ and https://stuk.github.io/jszip/documentation/api_jszip/load_async.html
+
+## Alifbom update
+
+- Kirill ↔ lotin in text and documents, with a visible ambiguity notice.
+- Changed-token preview (up to 30,000 characters), rendered via text nodes.
+- Optional local Uzbek Latin/Cyrillic OCR on PDF pages with no text layer, up to 10 scanned pages. Models and worker assets are bundled locally. PDF exports still reflow text, not the original layout.
+- No external analytics installed. No user text or documents are sent to analytics.
+
+### GitHub Pages handoff
+
+Push this repository to your own GitHub repository, select **Settings → Pages → Source: GitHub Actions**, then run **Actions → Publish Alifbom to GitHub Pages → Run workflow**. The workflow deploys only `dist`. It is manual to avoid publishing before account/domain setup is complete.
+
+After buying and verifying ownership of `alifbom.com`, set it as the custom domain in GitHub Pages settings and configure the DNS records at Namecheap using GitHub's current documentation. Enable HTTPS when GitHub's certificate is ready. No CNAME or DNS change has been made here. Add a canonical URL and sitemap using the confirmed production domain at that time. Static assets use relative URLs for repository subpath compatibility.
+
+GitHub references: https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages and https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site

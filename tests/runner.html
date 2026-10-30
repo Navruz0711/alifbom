@@ -1,4 +1,4 @@
-<!doctype html><meta charset="utf-8"><title>Alifbo hujjat konvertori tekshiruvi</title><h1>Hujjat konvertori tekshiruvi</h1><pre id="results">Tekshiruvlar bajarilmoqda…</pre><script src="../dist/vendor/jszip.min.js"></script><script src="../dist/converter.js"></script><script type="module">
+<!doctype html><meta charset="utf-8"><title>Alifbo hujjat konvertori tekshiruvi</title><h1>Hujjat konvertori tekshiruvi</h1><pre id="results">Tekshiruvlar bajarilmoqda…</pre><script src="../dist/vendor/jszip.min.js"></script><script src="../dist/vendor/pdf-lib.min.js"></script><script src="../dist/converter.js"></script><script type="module">
 import {readFile,convertFile,convertParts} from '../dist/file-engine.mjs';
 const results=[],assert=(v,m)=>{if(!v)throw Error(m)};
 async function fixture(name){const response=await fetch('./fixtures/'+name);return new File([await response.arrayBuffer()],name);}
@@ -14,5 +14,16 @@ await test('PDF: image-only/empty text explains OCR limitation',async()=>{let re
 await test('Reject corrupt DOCX and legacy DOC',async()=>{for(const name of ['bad.docx','unsupported.doc']){let rejected=false;try{await readFile(await fixture(name))}catch{rejected=true}assert(rejected,name+' accepted')}});
 await test('TXT: unicode and reverse capitals',async()=>{const doc=await readFile(await fixture('namuna.txt'));const out=await convertFile(doc,false);assert(out.text==='Ğayrat, özbek, Şahar, çiroy.','txt');const parts=[{text:'Ş'},{text:'AHAR Ç'},{text:'IROY'}];assert(convertParts(parts,true).join('')==='SHAHAR CHIROY','reverse capitals across runs')});
 await test('File size limit',async()=>{let rejected=false;try{await readFile({name:'huge.pdf',size:21*1024*1024})}catch(e){rejected=e.message.includes('20 MB')}assert(rejected,'size guard')});
+await test('Kirill/lotin document runs keep formatting',async()=>{
+ const doc=await readFile(await fixture('namuna.docx'));const out=await convertFile(doc,'lat-cyr');assert(out.text.includes('Ўзбекистон Шаҳар чиройли, ғайрат.'),'DOCX Cyrillic');
+ const zip=await JSZip.loadAsync(await out.blob.arrayBuffer());assert((await zip.file('word/document.xml').async('string')).includes('<w:b'),'bold lost');
+ assert(convertParts([{text:'ЎЗ'},{text:'БЕК ША'},{text:'ҲАР'}],'cyr-lat').join('')==='O‘ZBEK SHAHAR','uppercase split runs');
+});
+await test('Scanned PDF OCR recognizes pixels and exports converted PDF',async()=>{
+ const canvas=document.createElement('canvas');canvas.width=1400;canvas.height=500;const ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,1400,500);ctx.fillStyle='black';ctx.font='52px Arial';ctx.fillText('Shahar va chiroyli boglar.',60,150);ctx.fillText('Salom dunyo',60,250);
+ const pdf=await PDFLib.PDFDocument.create(),image=await pdf.embedPng(canvas.toDataURL());pdf.addPage([700,250]).drawImage(image,{x:0,y:0,width:700,height:250});
+ const source=await readFile(new File([await pdf.save()],'ocr.pdf'),()=>{},{ocr:true,ocrLanguage:'uzb'});assert(/shahar/i.test(source.text),'OCR text missing: '+source.text);assert(source.warnings.some(w=>w.includes('OCR')),'OCR warning');
+ const out=await convertFile(source,false);assert(out.text.includes('Şahar'),'OCR conversion');assert(out.blob.type==='application/pdf','OCR PDF export');
+});
 document.getElementById('results').textContent+='\nDONE '+results.filter(x=>x.startsWith('PASS')).length+'/'+results.length;
 </script>

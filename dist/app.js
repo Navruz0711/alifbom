@@ -39,10 +39,13 @@ $('clear').onclick=()=>{$('input').value='';manualText='';update();$('input').fo
 $('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('output').value);$('status').textContent='Nusxa olindi!';}catch{$('output').focus();$('output').select();$('status').textContent='Nusxa olish uchun Ctrl+C yoki ⌘C bosing.';}};$('download').onclick=()=>{download(new Blob([$('output').value],{type:'text/plain;charset=utf-8'}),'alifbom-matn.txt');$('status').textContent='TXT fayl tayyor';};
 $('choose-file').onclick=()=>$('file-input').click();$('file-input').onchange=e=>{chooseFiles(Array.from(e.target.files));e.target.value='';};$('remove-file').onclick=resetFile;$('save-file').onclick=()=>{if(fileResult&&!busy)download(fileResult.blob,fileResult.filename);};
 let dragDepth=0;$('dropzone').addEventListener('dragenter',e=>{e.preventDefault();dragDepth++;if(!busy)$('dropzone').classList.add('dragging');});$('dropzone').addEventListener('dragover',e=>e.preventDefault());$('dropzone').addEventListener('dragleave',()=>{if(--dragDepth<=0){dragDepth=0;$('dropzone').classList.remove('dragging');}});$('dropzone').addEventListener('drop',e=>{e.preventDefault();dragDepth=0;$('dropzone').classList.remove('dragging');if(!busy)chooseFiles(Array.from(e.dataTransfer.files));});
-$('conversion-kind').onchange=()=>{kind=$('conversion-kind').value;direction(false);};
+function fitSelect(sel){if(!sel)return;const t=sel.options[sel.selectedIndex]?.text||'';const c=fitSelect.c||(fitSelect.c=document.createElement('canvas'));const ctx=c.getContext('2d');ctx.font=getComputedStyle(sel).font||'13px "DM Sans",sans-serif';sel.style.width=(Math.ceil(ctx.measureText(t).width)+38)+'px';}
+$('conversion-kind').onchange=()=>{kind=$('conversion-kind').value;fitSelect($('conversion-kind'));direction(false);};
 $('show-changes').onchange=renderChanges;
 if(new URLSearchParams(location.search).get('mode')==='cyrillic'){kind='cyrillic';$('conversion-kind').value=kind;}
-labels();update();
+labels();update();fitSelect($('conversion-kind'));
+if(document.fonts)document.fonts.ready.then(()=>fitSelect($('conversion-kind')));
+if($('ocr-language')){$('ocr-language').onchange=()=>fitSelect($('ocr-language'));fitSelect($('ocr-language'));}
 
 $('swap-text').onclick=()=>{if(mode!=='text'||busy||!$('output').value)return;manualText=$('output').value;$('input').value=manualText;direction(!reverse);$('input').focus();};
 async function chooseFiles(files){

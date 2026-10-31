@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0f2e26"/>
+      <stop offset="50%" stop-color="#194c3c"/>
+      <stop offset="100%" stop-color="#246b51"/>
+    </linearGradient>
+    <linearGradient id="cardBg" x1="0" y1="0" x2="0" y2="1" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Subtle circles for depth -->
+  <circle cx="1100" cy="100" r="320" fill="#ffffff" fill-opacity="0.03"/>
+  <circle cx="100" cy="550" r="260" fill="#ffffff" fill-opacity="0.02"/>
+
+  <!-- Logo and brand -->
+  <g transform="translate(100, 90)">
+    <rect width="72" height="72" rx="20" fill="#F2F4DF"/>
+    <path d="M20 53 33.5 24h6.8L54 53h-9l-3.2-7.3H30.5L27.3 53H20Zm14-14.7h5.3L36.7 32 34 38.3Z" fill="#194C3C"/>
+    <circle cx="29" cy="16" r="3.4" fill="#7ba35d"/>
+    <circle cx="45" cy="16" r="3.4" fill="#7ba35d"/>
+    <text x="96" y="52" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="800" fill="#ffffff" letter-spacing="-1.5">alifbom</text>
+  </g>
+
+  <!-- Main Headline -->
+  <text x="100" y="270" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="64" font-weight="800" fill="#ffffff" letter-spacing="-1.5">
+    O‘zbek kirill-lotin konvertori
+  </text>
+
+  <!-- Subheadline -->
+  <text x="100" y="340" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="400" fill="#dce6d6">
+    Matn, Word, PowerPoint va PDF hujjatlarini bir zumda bepul o‘giring
+  </text>
+
+  <!-- Feature pills / badges -->
+  <g transform="translate(100, 420)">
+    <!-- Pill 1 -->
+    <rect x="0" y="0" width="220" height="54" rx="27" fill="url(#cardBg)" stroke="#89b278" stroke-opacity="0.4" stroke-width="1.5"/>
+    <text x="110" y="35" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="600" fill="#edf4e8">Kirill ↔ Lotin</text>
+
+    <!-- Pill 2 -->
+    <rect x="240" y="0" width="230" height="54" rx="27" fill="url(#cardBg)" stroke="#89b278" stroke-opacity="0.4" stroke-width="1.5"/>
+    <text x="355" y="35" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="600" fill="#edf4e8">Word · PDF · PPTX</text>
+
+    <!-- Pill 3 -->
+    <rect x="490" y="0" width="180" height="54" rx="27" fill="url(#cardBg)" stroke="#89b278" stroke-opacity="0.4" stroke-width="1.5"/>
+    <text x="580" y="35" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="600" fill="#edf4e8">OCR skaner</text>
+
+    <!-- Pill 4 -->
+    <rect x="690" y="0" width="220" height="54" rx="27" fill="url(#cardBg)" stroke="#89b278" stroke-opacity="0.4" stroke-width="1.5"/>
+    <text x="800" y="35" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="600" fill="#edf4e8">100% Maxfiy</text>
+  </g>
+
+  <!-- Bottom URL -->
+  <text x="100" y="555" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="600" fill="#9ec088" letter-spacing="1">
+    alifbom.com · alifbom-beta.vercel.app
+  </text>
+</svg>

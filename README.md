@@ -35,3 +35,7 @@ Push this repository to your own GitHub repository, select **Settings → Pages 
 After buying and verifying ownership of `alifbom.com`, set it as the custom domain in GitHub Pages settings and configure the DNS records at Namecheap using GitHub's current documentation. Enable HTTPS when GitHub's certificate is ready. No CNAME or DNS change has been made here. Add a canonical URL and sitemap using the confirmed production domain at that time. Static assets use relative URLs for repository subpath compatibility.
 
 GitHub references: https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages and https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site
+
+## Batch conversion
+
+Choose up to 10 files (20 MB each, 50 MB combined). Documents process sequentially; a failed file does not block the rest. Download successes separately or in one ZIP. Results use the direction selected at queue start. Stop takes effect after the current file completes. No document is uploaded. Text mode also supports swapping the result into the input with the reverse direction.

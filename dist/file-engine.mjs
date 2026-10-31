@@ -36,7 +36,7 @@ export function convertParts(parts,reverse){
  return result;
 }
 let zipLoad;
-async function getZip(){if(globalThis.JSZip)return globalThis.JSZip;if(!zipLoad)zipLoad=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='vendor/jszip.min.js';s.onload=()=>resolve(globalThis.JSZip);s.onerror=()=>{zipLoad=null;s.remove();reject(new Error('Hujjat moduli yuklanmadi. Sahifani yangilab qayta urinib ko‘ring.'));};document.head.append(s);});return zipLoad;}
+export async function getZip(){if(globalThis.JSZip)return globalThis.JSZip;if(!zipLoad)zipLoad=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='vendor/jszip.min.js';s.onload=()=>resolve(globalThis.JSZip);s.onerror=()=>{zipLoad=null;s.remove();reject(new Error('Hujjat moduli yuklanmadi. Sahifani yangilab qayta urinib ko‘ring.'));};document.head.append(s);});return zipLoad;}
 export async function readFile(file,progress=()=>{},options={}){
  const ext=file.name.split('.').pop().toLowerCase();if(!['pdf','docx','pptx','txt'].includes(ext))fail('PDF, DOCX, PPTX yoki TXT fayl tanlang. Eski DOC/PPT faylini avval DOCX/PPTX qilib saqlang.');
  if(!file.size)fail('Fayl bo‘sh. Boshqa hujjat tanlang.');if(file.size>MAX_FILE)fail('Fayl 20 MB dan katta. Kichikroq fayl tanlang.');

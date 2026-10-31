@@ -1,0 +1,13 @@
+<!doctype html><meta charset="utf-8"><title>Alifbom batch tests</title><h1>Ko‘p hujjat sinovlari</h1><pre id="result">Ishlamoqda…</pre><script src="../dist/vendor/jszip.min.js"></script><script src="../dist/converter.js?v=14"></script><script type="module">
+import {convertBatch,batchZip,validateBatch} from '../dist/batch.mjs';
+const lines=[],assert=(v,m)=>{if(!v)throw Error(m)};
+async function test(name,run){try{await run();lines.push('PASS '+name)}catch(e){lines.push('FAIL '+name+': '+e.message)}document.getElementById('result').textContent=lines.join('\n');}
+await test('Mixed success, broken file and duplicate names',async()=>{
+ const files=[new File(['Ўзбекистон'],'same.txt'),new File(['broken'],'bad.docx'),new File(['Шаҳар'],'same.txt')];let errors=0;
+ const results=await convertBatch(files,'cyr-lat',{},e=>{if(e.state==='error')errors++;});assert(results.length===2&&errors===1,'failure isolation');
+ const zip=await JSZip.loadAsync(await (await batchZip(results)).arrayBuffer());const paths=Object.keys(zip.files);assert(paths.length===2,'duplicate loss');assert((await zip.file(paths[0]).async('string'))==='O‘zbekiston','first text');assert((await zip.file(paths[1]).async('string'))==='Shahar','second text');
+});
+await test('Stop after current document',async()=>{let stop=false;const files=[new File(['Shahar'],'a.txt'),new File(['Chiroy'],'b.txt')];const out=await convertBatch(files,false,{},e=>{if(e.state==='done')stop=true;},()=>stop);assert(out.length===1,'cancel failed');});
+await test('Queue count and total-size guards',async()=>{for(const files of [Array.from({length:11},()=>({size:1})),[{size:51*1024*1024}]]){let rejected=false;try{validateBatch(files)}catch{rejected=true}assert(rejected,'guard failed');}});
+document.getElementById('result').textContent+='\nDONE '+lines.filter(x=>x.startsWith('PASS')).length+'/'+lines.length;
+</script>

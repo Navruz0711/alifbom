@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://alifbom-beta.vercel.app/sitemap.xml
+

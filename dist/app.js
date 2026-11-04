@@ -1,20 +1,21 @@
 const $=id=>document.getElementById(id);
 let kind='proposal';
 let reverse=false,mode='text',manualText='',loadedFile=null,fileResult=null,operation=0,busy=false;
-let batchResults=[],stopBatch=false,batchRunning=false;
+let batchResults=[],stopBatch=false;
 const count=s=>Array.from(s).length;
 const fileEngine=()=>import('./file-engine.mjs?v=13');
 function update(){const value=$('input').value;$('output').value=convert(value,conversionMode());$('input-count').textContent=`${count(value)} belgi · ${value.trim()?value.trim().split(/\s+/).length:0} so‘z`;$('output-count').textContent=`${count($('output').value)} belgi`;$('copy').disabled=$('download').disabled=!value;$('status').textContent=value?'Tayyor · Matn o‘girildi':'Yozishni boshlang';renderChanges();$('swap-text').disabled=mode!=='text'||busy||!value;}
 function conversionMode(){return kind==='proposal'?reverse:(reverse?'lat-cyr':'cyr-lat');}
+const directionArrow='<svg class="icon icon-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>';
 function labels(){
  const source=kind==='proposal'?(reverse?'Yangi yozuv':'Amaldagi yozuv'):(reverse?'Lotin yozuvi':'Kirill yozuvi');
  const target=kind==='proposal'?(reverse?'Amaldagi yozuv':'Yangi yozuv'):(reverse?'Kirill yozuvi':'Lotin yozuvi');
  $('input-label').textContent=source;$('output-label').textContent=target;
  $('output').placeholder=target+'dagi matningiz shu yerda ko‘rinadi…';
  $('input').placeholder=mode==='file'?'Hujjatingizdagi matn shu yerda ko‘rinadi…':source+'dagi matningizni yozing yoki joylashtiring…';
- $('forward').innerHTML=kind==='proposal'?'Amaldagi <span aria-hidden="true">→</span> Yangi':'Kirill <span aria-hidden="true">→</span> Lotin';
- $('reverse').innerHTML=kind==='proposal'?'Yangi <span aria-hidden="true">→</span> Amaldagi':'Lotin <span aria-hidden="true">→</span> Kirill';
- $('conversion-note').textContent=kind==='proposal'?'Yangi alifbo taklifi: G‘ → Ğ, O‘ → Ö, Sh → Ş, Ch → Ç.':'Kirill–lotin: e/ye, ts va chet tilidagi ismlar bir ma’noli bo‘lmasligi mumkin. Natijani tekshiring.';
+ $('forward').innerHTML=kind==='proposal'?'Amaldagi '+directionArrow+' Yangi':'Kirill '+directionArrow+' Lotin';
+ $('reverse').innerHTML=kind==='proposal'?'Yangi '+directionArrow+' Amaldagi':'Lotin '+directionArrow+' Kirill';
+ $('conversion-note').textContent=kind==='proposal'?'Yangi alifbo: G‘ → Ğ, O‘ → Ö, Sh → Ş, Ch → Ç. Kuchga kirish sanasi: 22.04.2027.':'Kirill–lotin: e/ye, ts va chet tilidagi ismlar bir ma’noli bo‘lmasligi mumkin. Natijani tekshiring.';
 }
 function renderChanges(){
  const enabled=$('show-changes').checked;$('changes-panel').hidden=!enabled;
@@ -51,8 +52,9 @@ $('swap-text').onclick=()=>{if(mode!=='text'||busy||!$('output').value)return;ma
 async function chooseFiles(files){
  if(busy||!files.length)return;
  if(files.length===1){$('batch-panel').hidden=true;batchResults=[];return chooseFile(files[0]);}
- let batch;try{batch=await import('./batch.mjs?v=1');batch.validateBatch(files);}catch(e){setMode('file');showError(e);return;}
- setMode('file');resetFile();stopBatch=false;batchRunning=true;batchResults=[];$('batch-panel').hidden=false;$('batch-download').disabled=true;$('batch-stop').hidden=false;$('batch-stop').disabled=false;
+ setBusy(true);
+ let batch;try{batch=await import('./batch.mjs?v=1');batch.validateBatch(files);}catch(e){setBusy(false);setMode('file');showError(e);return;}
+ setMode('file');resetFile();stopBatch=false;batchResults=[];$('batch-panel').hidden=false;$('batch-download').disabled=true;$('batch-stop').hidden=false;$('batch-stop').disabled=false;
  const current=conversionMode();$('batch-direction').textContent=kind==='proposal'?(reverse?'Yangi → Amaldagi':'Amaldagi → Yangi'):(reverse?'Lotin → Kirill':'Kirill → Lotin');
  $('batch-list').replaceChildren();const rows=files.map(file=>{const li=document.createElement('li'),name=document.createElement('strong'),status=document.createElement('span'),actions=document.createElement('div');name.textContent=file.name;status.textContent='Navbatda';li.append(name,status,actions);$('batch-list').append(li);return {li,status,actions};});
  setBusy(true);let done=0,failed=0;
@@ -65,7 +67,7 @@ async function chooseFiles(files){
  },()=>stopBatch);
  if(stopBatch)for(const row of rows)if(!row.li.dataset.state)row.status.textContent='O‘tkazib yuborildi';
  $('batch-status').textContent=`${stopBatch?'Navbat to‘xtatildi':'Navbat tugadi'}: ${done} tayyor, ${failed} xato.`;
- }catch(e){showError(e);}finally{batchRunning=false;setBusy(false);$('batch-stop').hidden=true;$('batch-download').disabled=!batchResults.length;}
+ }catch(e){showError(e);}finally{setBusy(false);$('batch-stop').hidden=true;$('batch-download').disabled=!batchResults.length;}
 }
 $('batch-stop').onclick=()=>{stopBatch=true;$('batch-stop').disabled=true;$('batch-status').textContent='Joriy fayl tugagach navbat to‘xtaydi…';};
 $('batch-download').onclick=async()=>{if(!batchResults.length||busy)return;setBusy(true);$('batch-download').disabled=true;try{const {batchZip}=await import('./batch.mjs?v=1');download(await batchZip(batchResults),'alifbom-hujjatlar.zip');$('batch-status').textContent='ZIP tayyor — '+batchResults.length+' ta hujjat.';}catch(e){showError(e);}finally{setBusy(false);$('batch-download').disabled=!batchResults.length;}};

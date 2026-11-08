@@ -2,9 +2,10 @@ const $=id=>document.getElementById(id);
 let kind='proposal';
 let reverse=false,mode='text',manualText='',loadedFile=null,fileResult=null,operation=0,busy=false;
 let batchResults=[],stopBatch=false;
+let clearedText='',pastePending=false;
 const count=s=>Array.from(s).length;
 const fileEngine=()=>import('./file-engine.mjs?v=13');
-function update(){const value=$('input').value;$('output').value=convert(value,conversionMode());$('input-count').textContent=`${count(value)} belgi · ${value.trim()?value.trim().split(/\s+/).length:0} so‘z`;$('output-count').textContent=`${count($('output').value)} belgi`;$('copy').disabled=$('download').disabled=!value;$('status').textContent=value?'Tayyor · Matn o‘girildi':'Yozishni boshlang';renderChanges();$('swap-text').disabled=mode!=='text'||busy||!value;}
+function update(){const value=$('input').value;$('restore-text').hidden=mode!=='text'||!!value||!clearedText;$('clear').disabled=!value;$('output').value=convert(value,conversionMode());$('input-count').textContent=`${count(value)} belgi · ${value.trim()?value.trim().split(/\s+/).length:0} so‘z`;$('output-count').textContent=`${count($('output').value)} belgi`;$('copy').disabled=$('download').disabled=!value;$('status').textContent=value?'Tayyor · Matn o‘girildi':'Yozishni boshlang';renderChanges();$('swap-text').disabled=mode!=='text'||busy||!value;}
 function conversionMode(){return kind==='proposal'?reverse:(reverse?'lat-cyr':'cyr-lat');}
 const directionArrow='<svg class="icon icon-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>';
 function labels(){
@@ -36,7 +37,7 @@ async function chooseFile(file){if(!file)return;setMode('file');resetFile();cons
 function direction(value){reverse=value;for(const [id,on] of [['forward',!value],['reverse',value]]){$(id).classList.toggle('active',on);$(id).setAttribute('aria-pressed',String(on));}labels();update();if(loadedFile)renderFile();}
 function download(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);}
 $('input').addEventListener('input',()=>{if(mode==='text')manualText=$('input').value;update();});$('forward').onclick=()=>direction(false);$('reverse').onclick=()=>direction(true);$('text-mode').onclick=()=>setMode('text');$('file-mode').onclick=()=>setMode('file');
-$('clear').onclick=()=>{$('input').value='';manualText='';update();$('input').focus();};$('example').onclick=()=>{const sample='O‘zbekiston — go‘zal o‘lka. Shaharlar, bog‘lar va ochiq ko‘ngilli insonlar.\nHar bir o‘zgarish yangi imkoniyat!';$('input').value=kind==='cyrillic'?(reverse?sample:convert(sample,'lat-cyr')):(reverse?convert(sample):sample);manualText=$('input').value;update();};
+$('clear').onclick=()=>{if(mode!=='text'||!$('input').value)return;clearedText=$('input').value;$('input').value='';manualText='';update();$('status').textContent='Matn tozalandi. Uni qaytarishingiz mumkin.';$('input').focus();};$('example').onclick=()=>{const sample='O‘zbekiston — go‘zal o‘lka. Shaharlar, bog‘lar va ochiq ko‘ngilli insonlar.\nHar bir o‘zgarish yangi imkoniyat!';$('input').value=kind==='cyrillic'?(reverse?sample:convert(sample,'lat-cyr')):(reverse?convert(sample):sample);manualText=$('input').value;update();};
 $('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('output').value);$('status').textContent='Nusxa olindi!';}catch{$('output').focus();$('output').select();$('status').textContent='Nusxa olish uchun Ctrl+C yoki ⌘C bosing.';}};$('download').onclick=()=>{download(new Blob([$('output').value],{type:'text/plain;charset=utf-8'}),'alifbom-matn.txt');$('status').textContent='TXT fayl tayyor';};
 $('choose-file').onclick=()=>$('file-input').click();$('file-input').onchange=e=>{chooseFiles(Array.from(e.target.files));e.target.value='';};$('remove-file').onclick=resetFile;$('save-file').onclick=()=>{if(fileResult&&!busy)download(fileResult.blob,fileResult.filename);};
 let dragDepth=0;$('dropzone').addEventListener('dragenter',e=>{e.preventDefault();dragDepth++;if(!busy)$('dropzone').classList.add('dragging');});$('dropzone').addEventListener('dragover',e=>e.preventDefault());$('dropzone').addEventListener('dragleave',()=>{if(--dragDepth<=0){dragDepth=0;$('dropzone').classList.remove('dragging');}});$('dropzone').addEventListener('drop',e=>{e.preventDefault();dragDepth=0;$('dropzone').classList.remove('dragging');if(!busy)chooseFiles(Array.from(e.dataTransfer.files));});
@@ -70,3 +71,18 @@ async function chooseFiles(files){
 }
 $('batch-stop').onclick=()=>{stopBatch=true;$('batch-stop').disabled=true;$('batch-status').textContent='Joriy fayl tugagach navbat to‘xtaydi…';};
 $('batch-download').onclick=async()=>{if(!batchResults.length||busy)return;setBusy(true);$('batch-download').disabled=true;try{const {batchZip}=await import('./batch.mjs?v=1');download(await batchZip(batchResults),'alifbom-hujjatlar.zip');$('batch-status').textContent='ZIP tayyor — '+batchResults.length+' ta hujjat.';}catch(e){showError(e);}finally{setBusy(false);$('batch-download').disabled=!batchResults.length;}};
+
+$('restore-text').onclick=()=>{if(mode!=='text'||$('input').value||!clearedText)return;$('input').value=manualText=clearedText;clearedText='';update();$('input').focus();$('status').textContent='Matn qaytarildi.';};
+$('paste-text').onclick=async()=>{
+ if(mode!=='text'||pastePending)return;
+ const input=$('input'),original=input.value,start=input.selectionStart,end=input.selectionEnd;
+ pastePending=true;$('paste-text').disabled=true;
+ try{
+  const text=await navigator.clipboard.readText();
+  if(mode!=='text'||input.value!==original)return;
+  if(!text){$('status').textContent='Nusxalash buferida matn yo‘q.';return;}
+  input.value=original.slice(0,start)+text+original.slice(end);manualText=input.value;
+  update();input.focus();input.setSelectionRange(start+text.length,start+text.length);
+ }catch{if(mode==='text'){input.focus();$('status').textContent='Joylashtirish uchun Ctrl+V yoki ⌘V bosing. Telefonda matn maydonini bosib turing.';}}
+ finally{pastePending=false;$('paste-text').disabled=false;}
+};

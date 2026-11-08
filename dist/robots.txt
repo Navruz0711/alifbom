@@ -1,5 +1,5 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://alifbom-beta.vercel.app/sitemap.xml
+Sitemap: https://www.alifbom.com/sitemap.xml
 

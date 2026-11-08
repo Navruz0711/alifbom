@@ -28,6 +28,8 @@ function renderChanges(){
  $('changes-preview').replaceChildren(frag);$('changes-summary').textContent=changed+' ta qism o‘girildi';
 }
 function setMode(value){if(value===mode)return;if(mode==='text')manualText=$('input').value;mode=value;$('converter').classList.toggle('file-mode',mode==='file');$('file-workspace').hidden=mode!=='file';for(const id of ['text','file']){$(id+'-mode').classList.toggle('selected',mode===id);$(id+'-mode').setAttribute('aria-pressed',String(mode===id));}$('input').readOnly=mode==='file';$('input').value=mode==='file'?(loadedFile?.text||''):manualText;labels();update();}
+function editorView(output){$('converter').classList.toggle('show-result',output);$('view-input').setAttribute('aria-pressed',String(!output));$('view-output').setAttribute('aria-pressed',String(output));}
+$('view-input').onclick=()=>editorView(false);$('view-output').onclick=()=>editorView(true);
 function progress(value,message){$('file-progress').value=value;$('file-status').textContent=message;}
 function setBusy(value){busy=value;$('swap-text').disabled=value||mode!=='text'||!$('input').value;$('choose-file').disabled=$('remove-file').disabled=value;$('save-file').disabled=value||!fileResult;$('forward').disabled=$('reverse').disabled=$('conversion-kind').disabled=$('ocr-enabled').disabled=$('ocr-language').disabled=value;$('file-workspace').setAttribute('aria-busy',String(value));}
 function resetFile(){operation++;loadedFile=null;fileResult=null;setBusy(false);$('file-input').value='';$('file-state').hidden=$('file-ready').hidden=$('file-error').hidden=$('file-warning').hidden=true;if(mode==='file'){$('input').value='';update();}}
@@ -48,29 +50,29 @@ labels();update();
 
 
 
-$('swap-text').onclick=()=>{if(mode!=='text'||busy||!$('output').value)return;manualText=$('output').value;$('input').value=manualText;direction(!reverse);$('input').focus();};
+$('swap-text').onclick=()=>{if(mode!=='text'||busy||!$('output').value)return;manualText=$('output').value;$('input').value=manualText;direction(!reverse);editorView(false);$('input').focus();};
 async function chooseFiles(files){
  if(busy||!files.length)return;
  if(files.length===1){$('batch-panel').hidden=true;batchResults=[];return chooseFile(files[0]);}
  setBusy(true);
- let batch;try{batch=await import('./batch.mjs?v=1');batch.validateBatch(files);}catch(e){setBusy(false);setMode('file');showError(e);return;}
+ let batch;try{batch=await import('./batch.mjs?v=2');batch.validateBatch(files);}catch(e){setBusy(false);setMode('file');showError(e);return;}
  setMode('file');resetFile();stopBatch=false;batchResults=[];$('batch-panel').hidden=false;$('batch-download').disabled=true;$('batch-stop').hidden=false;$('batch-stop').disabled=false;
  const current=conversionMode();$('batch-direction').textContent=kind==='proposal'?(reverse?'Yangi → Amaldagi':'Amaldagi → Yangi'):(reverse?'Lotin → Kirill':'Kirill → Lotin');
- $('batch-list').replaceChildren();const rows=files.map(file=>{const li=document.createElement('li'),name=document.createElement('strong'),status=document.createElement('span'),actions=document.createElement('div');name.textContent=file.name;status.textContent='Navbatda';li.append(name,status,actions);$('batch-list').append(li);return {li,status,actions};});
+ $('batch-list').replaceChildren();const rows=files.map(file=>{const li=document.createElement('li'),name=document.createElement('strong'),status=document.createElement('span'),actions=document.createElement('div');const meter=document.createElement('progress');meter.max=100;meter.value=0;meter.setAttribute('aria-label',file.name+' jarayoni');name.textContent=file.name;status.textContent='Navbatda';li.append(name,status,meter,actions);$('batch-list').append(li);return {li,status,meter,actions};});
  setBusy(true);let done=0,failed=0;
  try{batchResults=await batch.convertBatch(files,current,{ocr:$('ocr-enabled').checked,ocrLanguage:$('ocr-language').value},event=>{
-  const row=rows[event.index];row.li.dataset.state=event.state;
+  const row=rows[event.index];row.li.dataset.state=event.state;row.meter.value=event.state==='done'?100:(event.value??row.meter.value);if(event.state==='error')row.meter.hidden=true;
   if(event.state==='done'){done++;row.status.textContent=event.result.warnings.length?'Tayyor · '+event.result.warnings.join(' '):'Tayyor';const button=document.createElement('button');button.type='button';button.className='text-button';button.textContent='Yuklab olish';button.onclick=()=>download(event.result.blob,event.result.filename);row.actions.append(button);}
   else if(event.state==='error'){failed++;row.status.textContent=event.message;}
-  else row.status.textContent=event.message;
+  else row.status.textContent=(event.stage==='converting'?'O‘girilmoqda · ':'O‘qilmoqda · ')+event.message;
   $('batch-status').textContent=`${done} tayyor · ${failed} xato · ${files.length} fayl`;
  },()=>stopBatch);
- if(stopBatch)for(const row of rows)if(!row.li.dataset.state)row.status.textContent='O‘tkazib yuborildi';
+ if(stopBatch)for(const row of rows)if(!row.li.dataset.state){row.status.textContent='O‘tkazib yuborildi';row.meter.hidden=true;}
  $('batch-status').textContent=`${stopBatch?'Navbat to‘xtatildi':'Navbat tugadi'}: ${done} tayyor, ${failed} xato.`;
  }catch(e){showError(e);}finally{setBusy(false);$('batch-stop').hidden=true;$('batch-download').disabled=!batchResults.length;}
 }
 $('batch-stop').onclick=()=>{stopBatch=true;$('batch-stop').disabled=true;$('batch-status').textContent='Joriy fayl tugagach navbat to‘xtaydi…';};
-$('batch-download').onclick=async()=>{if(!batchResults.length||busy)return;setBusy(true);$('batch-download').disabled=true;try{const {batchZip}=await import('./batch.mjs?v=1');download(await batchZip(batchResults),'alifbom-hujjatlar.zip');$('batch-status').textContent='ZIP tayyor — '+batchResults.length+' ta hujjat.';}catch(e){showError(e);}finally{setBusy(false);$('batch-download').disabled=!batchResults.length;}};
+$('batch-download').onclick=async()=>{if(!batchResults.length||busy)return;setBusy(true);$('batch-download').disabled=true;try{const {batchZip}=await import('./batch.mjs?v=2');download(await batchZip(batchResults),'alifbom-hujjatlar.zip');$('batch-status').textContent='ZIP tayyor — '+batchResults.length+' ta hujjat.';}catch(e){showError(e);}finally{setBusy(false);$('batch-download').disabled=!batchResults.length;}};
 
 $('restore-text').onclick=()=>{if(mode!=='text'||$('input').value||!clearedText)return;$('input').value=manualText=clearedText;clearedText='';update();$('input').focus();$('status').textContent='Matn qaytarildi.';};
 $('paste-text').onclick=async()=>{

@@ -6,11 +6,8 @@ export async function convertBatch(files,direction,options={},onUpdate=()=>{},ca
   if(cancelled())break;
   const file=files[i];onUpdate({index:i,state:'running',message:'Fayl ochilmoqda…'});
   try{
-   const reading=(value,message)=>onUpdate({index:i,state:'running',stage:'reading',value:Math.max(0,Math.min(100,value))*0.5,message});
-   const converting=(value,message)=>onUpdate({index:i,state:'running',stage:'converting',value:50+Math.max(0,Math.min(100,value))*0.5,message});
-   const doc=await readFile(file,reading,options);
-   converting(0,'Matn tayyorlanmoqda…');
-   const out=await convertFile(doc,direction,converting);
+   const progress=(value,message)=>onUpdate({index:i,state:'running',message});
+   const doc=await readFile(file,progress,options),out=await convertFile(doc,direction,progress);
    if(bytes+out.blob.size>80*1024*1024)throw Error('Natijalar hajmi 80 MB chegarasiga yetdi. Fayllarni kichikroq guruhlarga ajrating.');
    bytes+=out.blob.size;
    const result={index:i,name:file.name,...out,warnings:[...(doc.warnings||[]),...(out.warnings||[])]};results.push(result);onUpdate({index:i,state:'done',result});
